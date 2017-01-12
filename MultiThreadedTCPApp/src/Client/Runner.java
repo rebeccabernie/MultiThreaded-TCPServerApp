@@ -26,8 +26,8 @@ public class Runner {
 			// If username password = correct do this
 				System.out.println("What would you like to do?");
 				System.out.println("1. Change Details");
-				System.out.println("2. Make Lodgement");			System.out.println("1. Register");
-				System.out.println("3. Make Withdrawal");
+				System.out.println("2. Make Lodgement");
+				System.out.println("3. Make Withdrawal"); // Credit limit of 1000
 				System.out.println("4. View Last 10 Transactions");
 				System.out.println("Select an option: ");
 				loggedInChoice = console.nextInt();

@@ -1,77 +1,115 @@
-// G00320698 - Rebecca Kane
-// Server class - server side functionality
+// G00320698 Rebecca Kane
+// Server Class based on "Provider" file on moodle, lecturer Martin Hynes / Operating Systems 1
+
 package Server;
 
 import java.io.*;
 import java.net.*;
+import java.util.Scanner;
 
-public class Server {
+public class Server{
+	ServerSocket serverSocket;
+	Socket connection = null;
 
-	private ServerSocket serverSock; 
-	private static final int PORT = 7777;  
-	private volatile boolean keepRunning = true;
+	ObjectOutputStream out;
+	ObjectInputStream in;
+	Scanner input;
+	String message;
+	String user_input;
+	int num1;
+	int num2;
+	int choice;
+	int result;
 	
-	public Server()
+	
+	Server()
 	{
-		try 
-		{ 
-			serverSock = new ServerSocket(PORT);
-			Thread serverThread = new Thread(new Listener(), "Web Server Listener");
-			serverThread.setPriority(Thread.MAX_PRIORITY); 
-			serverThread.start();
-			
-			System.out.println("Server started and listening on port " + PORT);
-			
-		} catch (IOException e) 
-		{
-			System.out.println("Error - " + e.getMessage());
-		}
-	} // end private Server method
-	
-	
-	//A main method is required to start a standard Java application
-	public static void main(String[] args) {
-		//new Server(); //Create an instance of a WebServer. This fires the constructor of WebServer() above on the main stack
-		System.out.println("Server running...");
+		input = new Scanner(System.in);
 	}
-	
-	private class Listener implements Runnable {
-		
-		public void run() { // run() must be implemented
+	void listener()
+	{
+		try{
+			//1. creating a server socket
+			serverSocket = new ServerSocket(2010, 10);
+			//2. Wait for connection
+			System.out.println("Waiting for connection");
 			
-			int count = 0; // Amount of requests
+			connection = serverSocket.accept();
 			
-			while (keepRunning){ 
-				try { 
-					Socket socket = serverSock.accept();
-					new Thread(new HTTPRequest(socket), "T-" + count).start(); 
-					count++; // Add to request count
-				} catch (IOException e) { 
-					System.out.println("Error - " + e.getMessage());
+			System.out.println("Connection received from " + connection.getInetAddress().getHostName());
+			//3. get Input and Output streams
+			out = new ObjectOutputStream(connection.getOutputStream());
+			out.flush();
+			in = new ObjectInputStream(connection.getInputStream());
+			
+			//4. The two parts communicate via the input and output streams
+			do{
+				try{
+					sendMessage("Please Enter the Number 1");
+					message = (String)in.readObject();
+					num1 = new Integer(message);
+					
+					sendMessage("Please Enter the Number 2");
+					message = (String)in.readObject();
+					num2 = new Integer(message);
+					
+					sendMessage("Please enter 1 for addition OR 2 for subtraction");
+					message = (String)in.readObject();
+					choice = new Integer(message);
+					
+					if(choice==1)
+						result = num1 + num2;
+					else if(choice==2)
+						result = num1 - num2;
+					
+					sendMessage(""+result);
+					
+					message=(String)in.readObject();
+					
+					if(message.compareTo("Thank You!")==0)
+						sendMessage("Thank You!");
+					
+					
+					
+					
 				}
-			} // End while
-			
-		} // End run()
-		
-	}// End Listener class
-	
-	private class HTTPRequest implements Runnable{
-		private Socket sock; //A specific socket connection - different to socket or serverSock
-
-		private HTTPRequest(Socket request) { 
-			this.sock = request; // Value for request is assigned to this instance of sock
+				catch(ClassNotFoundException classnot){
+					System.err.println("Data received in unknown format");
+				}
+			}while(!message.equals("Thank You!"));
 		}
-
-		public void run() { // Again, run() must be implemented
-            try{
-            	//System.out.println("Server connected."); - displays after the prompt to the user, just commented out to avoid any confusion
-            	System.out.print("");
-            } catch (Exception e) { 
-            	System.out.println("Error processing request from " + sock.getRemoteSocketAddress());
-            	e.printStackTrace();
-            }
-        } // End run()
-		
-	} // End HTTPRequest class
-	
-} // End Server class
+		catch(IOException ioException){
+			ioException.printStackTrace();
+		}
+		finally{
+			//4: Closing connection
+			try{
+				in.close();
+				out.close();
+				serverSocket.close();
+			}
+			catch(IOException ioException){
+				ioException.printStackTrace();
+			}
+		}
+	}
+	void sendMessage(String msg)
+	{
+		try{
+			out.writeObject(msg);
+			out.flush();
+			System.out.println("server>" + msg);
+		}
+		catch(IOException ioException){
+			ioException.printStackTrace();
+		}
+	}
+	public static void main(String args[])
+	{
+		Server server = new Server();
+		while(true)
+		{
+			server.listener();
+		}
+	}
+}
