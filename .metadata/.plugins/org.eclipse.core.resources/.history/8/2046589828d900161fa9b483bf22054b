@@ -1,0 +1,147 @@
+// G00320698 Rebecca Kane
+// Client Class based on "Requester" file on moodle, lecturer Martin Hynes / Operating Systems 1
+
+package client;
+
+import java.io.*;
+import java.net.*;
+import java.util.Scanner;
+
+public class Client{
+	// Basic Variables
+	Socket requestSocket;
+	ObjectOutputStream out;
+ 	ObjectInputStream in;
+ 	String message="";
+ 	String ipaddress;
+ 	static Scanner console;
+ 	
+ 	// Variables for UI based stuff
+ 	//String [][][][][] users =
+	private static int choice = 0;
+	private static int loggedInChoice = 0;	
+	static String username, password;
+	static String name, address;
+	static int accountNum;
+ 	
+	// Empty constructor
+	Client(){}
+	
+	void run()
+	{
+		console = new Scanner(System.in);
+		try{
+			//1. creating a socket to connect to the server
+			System.out.println("Please Enter your IP Address");
+			ipaddress = console.next();
+			requestSocket = new Socket(ipaddress, 2004);
+			System.out.println("Connected to "+ipaddress+" in port 2004");
+			//2. get Input and Output streams
+			out = new ObjectOutputStream(requestSocket.getOutputStream());
+			out.flush();
+			in = new ObjectInputStream(requestSocket.getInputStream());
+			System.out.println("Hello");
+			//3: Communicating with the server
+			do{
+				try
+				{
+						message = (String)in.readObject();
+						System.out.println("Please Enter the Message to send...");
+						message = console.next();
+						sendMessage(message);		
+				}
+				catch(ClassNotFoundException classNot)
+				{
+					System.err.println("data received in unknown format");
+				}
+			}while(!message.equals("bye"));
+		}
+		catch(UnknownHostException unknownHost){
+			System.err.println("You are trying to connect to an unknown host!");
+		}
+		catch(IOException ioException){
+			ioException.printStackTrace();
+		}
+		finally{
+			//4: Closing connection
+			try{
+				in.close();
+				out.close();
+				requestSocket.close();
+			}
+			catch(IOException ioException){
+				ioException.printStackTrace();
+			}
+		}
+	} // end run()
+	
+	void sendMessage(String msg)
+	{
+		try{
+			out.writeObject(msg);
+			out.flush();
+			System.out.println("client>" + msg);
+		}
+		catch(IOException ioException){
+			ioException.printStackTrace();
+		}
+	} // end sendMessage
+	
+	public static void main(String args[])
+	{
+		Client client = new Client();
+		client.run();
+		System.out.println("Connected to the server.");
+		
+		System.out.println("1. Register");
+		System.out.println("2. Log In");
+		System.out.println("\nSelect option 1 or 2 please: ");
+		choice = console.nextInt();
+		
+		if(choice == 1){
+			//register
+			System.out.print("Name: ");
+			name = console.next();
+			
+			System.out.print("Address (One Line): ");
+			address = console.next();
+			
+			System.out.print("Bank A/C Num: ");
+			accountNum = console.nextInt();
+			
+			System.out.print("Username: ");
+			username = console.next();
+			
+			System.out.print("Password: ");
+			password = console.next();
+			
+			
+		} // End choice for registering		
+	
+		else if(choice == 2){
+			//log in username password
+			
+			// If username password = correct do this
+				System.out.println("What would you like to do?");
+				System.out.println("1. Change Details");
+				System.out.println("2. Make Lodgement");
+				System.out.println("3. Make Withdrawal"); // Credit limit of 1000
+				System.out.println("4. View Last 10 Transactions");
+				System.out.println("Select an option: ");
+				loggedInChoice = console.nextInt();
+				
+				//if else statements here
+			
+			// if username password = wrong
+				System.out.println("Error, wrong details provided...");
+
+
+		} // End else for logged in user choices
+		
+		else { // just in case user tries an invalid option
+			System.out.println("Please enter a valid option...");
+			choice = console.nextInt(); // Allow user to enter an option again	
+		}
+			
+	} // end main
+}

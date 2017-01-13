@@ -1,6 +1,3 @@
-// G00320698 Rebecca Kane
-// Client Class based on "Requester" file on moodle, lecturer Martin Hynes / Operating Systems 1
-
 package client;
 
 import java.io.*;
@@ -48,21 +45,25 @@ public class Client{
 					message = (String)in.readObject();
 					System.out.println("Result: "+message);
 					
-					System.out.println("Would you like to do another calulation.... Enter Yes or No");
-					
+					System.out.println("Would you like to\n1. Withdraw,\n2. Lodge, or\n3. Log Out?");
 					message = user_input.next();
-					if(message.compareTo("No")==0)
-					{
-						sendMessage("Thank You!");
 					
+					if(message.compareTo("1")==0)
+					{
+						sendMessage("Withdraw");
 						message = (String)in.readObject();
 					
 					}
 					
-					else
+					else if(message.compareTo("2")==0)
 					{
-						sendMessage("Continue");
+						sendMessage("Lodge");
 					}
+					
+					else if(message.compareTo("3")==0){
+						sendMessage("bye");
+					}
+					
 					
 					
 				}

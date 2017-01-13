@@ -1,0 +1,96 @@
+// G00320698 Rebecca Kane
+// Based on "Provider" code on moodle, lecturer Martin Hynes / Operating Systems 1
+
+package server;
+
+import java.io.*;
+import java.net.*;
+import java.util.ArrayList;
+
+public class Server{
+	
+	// Basic Variables for behind the scenes stuff
+	ServerSocket providerSocket;
+	Socket connection = null;
+	ObjectOutputStream out;
+	ObjectInputStream in;
+	String message;
+
+	// UI based variables
+	static String name, address;
+	static int accNum;
+	static String username, password;
+	static int balance = 0;
+	static int withdrawl = 0;
+	static int lodgement = 0;
+	static boolean loggedIn = false; // default not logged in for "security"/obvious reasons
+	static int choice;
+	static int loggedInChoice;
+	
+	// ArrayList of accounts - using Accounts class
+	ArrayList<Accounts> accountList = new ArrayList<Accounts>();
+
+	// Empty Constructor
+	Server (){}
+	
+	void run()
+	{
+		try{
+			//1. creating a server socket
+			providerSocket = new ServerSocket(2004, 10); // listening on 2004
+			//2. Wait for connection
+			System.out.println("Waiting for connection");
+			connection = providerSocket.accept();
+			System.out.println("Connection received from " + connection.getInetAddress().getHostName());
+			//3. get Input and Output streams
+			out = new ObjectOutputStream(connection.getOutputStream());
+			out.flush();
+			in = new ObjectInputStream(connection.getInputStream());
+			sendMessage("Connection successful");
+			//4. The two parts communicate via the input and output streams
+			do{
+				try{
+					message = (String)in.readObject();
+					System.out.println("client>" + message);
+					if (message.equals("bye"))
+						sendMessage("bye");
+				}
+				catch(ClassNotFoundException classnot){
+					System.err.println("Data received in unknown format");
+				}
+			}while(!message.equals("bye"));
+		}
+		catch(IOException ioException){
+			ioException.printStackTrace();
+		}
+		finally{
+			//4: Closing connection - good practice to close connections/threads
+			try{
+				in.close();
+				out.close();
+				providerSocket.close();
+			}
+			catch(IOException ioException){
+				ioException.printStackTrace();
+			}
+		}
+	}
+	void sendMessage(String msg)
+	{
+		try{
+			out.writeObject(msg);
+			out.flush();
+			System.out.println("server>" + msg);
+		}
+		catch(IOException ioException){
+			ioException.printStackTrace();
+		}
+	}
+	public static void main(String args[])
+	{
+		Server server = new Server();
+		while(true){
+			server.run();
+		}
+	}
+}

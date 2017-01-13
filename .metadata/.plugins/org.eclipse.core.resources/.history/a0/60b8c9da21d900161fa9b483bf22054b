@@ -1,0 +1,121 @@
+// G00320698 Rebecca Kane
+// Server Class based on "Provider" file on moodle, lecturer Martin Hynes / Operating Systems 1
+
+package server;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.net.ServerSocket;
+import java.net.Socket;
+
+public class Server{
+	ServerSocket serverSocket;
+	Socket connection = null;
+
+	ObjectOutputStream out;
+	ObjectInputStream in;
+	Scanner input;
+	String message;
+	String user_input;
+	int num1;
+	int num2;
+	int choice;
+	int result;
+	
+	
+	Server()
+	{
+		input = new Scanner(System.in);
+	}
+	void listener()
+	{
+		try{
+			//1. creating a server socket
+			serverSocket = new ServerSocket(2010, 10);
+			//2. Wait for connection
+			System.out.println("Waiting for connection");
+			
+			connection = serverSocket.accept();
+			
+			System.out.println("Connection received from " + connection.getInetAddress().getHostName());
+			//3. get Input and Output streams
+			out = new ObjectOutputStream(connection.getOutputStream());
+			out.flush();
+			in = new ObjectInputStream(connection.getInputStream());
+			
+			//4. The two parts communicate via the input and output streams
+			do{
+				try{
+					sendMessage("Please Enter the Number 1");
+					message = (String)in.readObject();
+					num1 = new Integer(message);
+					
+					sendMessage("Please Enter the Number 2");
+					message = (String)in.readObject();
+					num2 = new Integer(message);
+					
+					sendMessage("Please enter 1 for addition OR 2 for subtraction");
+					message = (String)in.readObject();
+					choice = new Integer(message);
+					
+					if(choice==1)
+						result = num1 + num2;
+					else if(choice==2)
+						result = num1 - num2;
+					
+					sendMessage(""+result);
+					
+					message=(String)in.readObject();
+					
+					if(message.compareTo("Thank You!")==0)
+						sendMessage("Thank You!");
+					
+					
+					
+					
+				}
+				catch(ClassNotFoundException classnot){
+					System.err.println("Data received in unknown format");
+				}
+			}while(!message.equals("Thank You!"));
+		}
+		catch(IOException ioException){
+			ioException.printStackTrace();
+		}
+		finally{
+			//4: Closing connection
+			try{
+				in.close();
+				out.close();
+				serverSocket.close();
+			}
+			catch(IOException ioException){
+				ioException.printStackTrace();
+			}
+		}
+	}
+	void sendMessage(String msg)
+	{
+		try{
+			out.writeObject(msg);
+			out.flush();
+			System.out.println("server>" + msg);
+		}
+		catch(IOException ioException){
+			ioException.printStackTrace();
+		}
+	}
+	public static void main(String args[])
+	{
+		Server server = new Server();
+		while(true)
+		{
+			server.listener();
+		}
+	}
+}

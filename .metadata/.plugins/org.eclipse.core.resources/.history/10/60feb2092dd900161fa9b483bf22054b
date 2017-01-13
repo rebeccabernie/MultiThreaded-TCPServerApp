@@ -1,0 +1,255 @@
+package p;
+
+import java.io.*;
+import java.net.*;
+import java.util.*;
+
+public class Server {
+	public static void main(String[] args) throws Exception {
+		// Setting up socket
+		ServerSocket m_ServerSocket = new ServerSocket(2004,10);
+		int id = 0;
+		while (true) {
+			// Accept the connection
+			Socket clientSocket = m_ServerSocket.accept();
+			// Create and start the new thread
+			ClientServiceThread cliThread = new ClientServiceThread(clientSocket, id++);
+			cliThread.start();
+		}
+	}
+}
+
+class ClientServiceThread extends Thread {
+	
+	Socket clientSocket;
+	String message;
+	int clientID = -1;
+	boolean running = true;
+	ObjectOutputStream out;
+	ObjectInputStream in;
+	
+	// User Details Variables
+	static String name;
+	static String address;
+	static int accountNum;
+	static String username;
+	static String password;
+	static int balance = 0;
+	
+	// Variable used to check if user is logged in
+	// False for no and True for yes
+	static boolean loggedIn = false;
+	static int currentAcc = 0;
+	static int withdrawl = 0;
+	static int lodgement = 0;
+	
+	// List for storing the accounts
+	ArrayList<Account> accountList = new ArrayList<Account>();
+	
+	static int choice;
+	static int choiceLogIn;
+	
+	ClientServiceThread(Socket s, int i) {
+		clientSocket = s;
+		clientID = i;
+	}
+	
+	public void run() {
+		try
+		{
+			out = new ObjectOutputStream(clientSocket.getOutputStream());
+			out.flush();
+			in = new ObjectInputStream(clientSocket.getInputStream());
+			System.out.println("Accepted Client : ID - " + clientID + " : Address - "
+			+ clientSocket.getInetAddress().getHostName());
+			
+			do{
+				try
+				{
+					// Send the instructions to the client
+					sendMessage("\n1: Register with the system \n"
+							+ "2: Log-in \n"
+							+ "0: Exit");
+					
+					// Wait for response 
+					message = (String)in.readObject();
+					choice = new Integer(message);
+					
+					// Decide where to go next
+					if (choice == 1)
+						register();
+					else if (choice == 2)
+						login();
+					
+					do{
+						sendMessage("1: Update your detals \n"
+								+ "2: Make a Lodgement \n"
+								+ "3: Make a Withdrawl (Max 1000)");
+						message=(String)in.readObject();
+						choiceLogIn = new Integer(message);
+						
+						if(choiceLogIn == 1)
+							editDetails();
+						else if (choiceLogIn == 2) 
+							lodge();
+						else if (choiceLogIn == 3)
+							withdraw();
+					}while (loggedIn == true);
+				}
+				catch(ClassNotFoundException classnot){
+					System.err.println("Data received in unknown format");
+				}
+				
+			}while(!message.equals("Thank you, Goodbye"));
+			
+			System.out.println("Ending Client : ID - " + clientID + " : Address - "
+			+ clientSocket.getInetAddress().getHostName());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	// Send a message to the client
+	void sendMessage(String msg)
+	{
+		try{
+			out.writeObject(msg);
+			out.flush();
+			System.out.println("server>" + msg);
+		}
+		catch(IOException ioException){
+			ioException.printStackTrace();
+		}
+	}
+	
+	// To set a new account on the system
+	public void register() throws ClassNotFoundException, IOException {
+		
+		sendMessage("Enter your Name");
+		message = (String)in.readObject();
+		name = message;
+		
+		sendMessage("Enter your address");
+		message = (String)in.readObject();
+		address = message;
+		
+		sendMessage("Enter your account number");
+		message = (String)in.readObject();
+		accountNum = new Integer(message);
+		
+		sendMessage("Enter a Username");
+		message = (String)in.readObject();
+		username = message;
+		
+		sendMessage("Enter a Password");
+		message = (String)in.readObject();
+		password = message;
+		
+		// Add the new Account to the database(list of accounts)
+		accountList.add(new Account(name, address, accountNum, username, password, balance));
+		
+		loggedIn = true;
+		
+	} // end register
+	
+	// Login into the system / check to see if user is in system
+	public void login() throws ClassNotFoundException, IOException {
+		
+		// Ask for login details
+		sendMessage("Enter Username");
+		username = (String)in.readObject();
+		
+		sendMessage("Enter Password");
+		password = (String)in.readObject();
+		
+		// Look through array to see if user is in the system
+		for (int i = 0; i < accountList.size(); i++) {
+			// If login details are OK allow user to proceed
+			if (accountList.get(i).getUsername().equals(username) && 
+					accountList.get(i).getPassword().equals(password)) {
+				sendMessage("Login Successful");
+				loggedIn = true;
+				currentAcc = i;	
+			}
+			// If login details are not found in the system
+			else if (accountList.get(i).getUsername() != (username) && 
+					accountList.get(i).getPassword() != (password)) {
+				sendMessage("Login un-Successful... Acount is not in the system");
+			}
+			
+			sendMessage("User Balance is " + balance);
+		}
+	} // end login
+	
+	// Edit all of the users account details
+	public void editDetails() throws ClassNotFoundException, IOException {
+		
+		sendMessage("Enter updated Name");
+		message = (String)in.readObject();
+		name = message;
+		
+		sendMessage("Enter updated address");
+		message = (String)in.readObject();
+		address = message;
+		
+		sendMessage("Enter updated account number");
+		message = (String)in.readObject();
+		accountNum = new Integer(message);
+		
+		sendMessage("Enter updated Username");
+		message = (String)in.readObject();
+		username = message;
+		
+		sendMessage("Enter updated Password");
+		message = (String)in.readObject();
+		password = message;
+		
+		// Look through array to find the user account
+		// Take the updated details and put them into the array
+		for (int i = 0; i < accountList.size(); i++) {
+			if (accountList.get(i).equals(currentAcc)) {
+				accountList.get(i).setName(name);
+				accountList.get(i).setAddress(address);
+				accountList.get(i).setAccountNum(accountNum);
+				accountList.get(i).setUsername(username);
+				accountList.get(i).setPassword(password);
+			}
+		} // end for
+		
+	} // end editDetails
+	
+	// Add funds to the users account
+	public void lodge() throws ClassNotFoundException, IOException {
+		
+		sendMessage("Enter the amount you would like to lodge..");
+		message = (String)in.readObject();
+		lodgement = new Integer(message);
+		
+		for (int i = 0; i < accountList.size(); i++) {
+			if (accountList.get(i).equals(currentAcc)) {
+				accountList.get(i).lodge(lodgement);
+			}
+		}
+	} // end lodge
+	
+	// Take a user specified amount out of the account up to 1000
+	public void withdraw() throws ClassNotFoundException, IOException {
+		
+		sendMessage("Enter the amount you would like to withdraw..");
+		message = (String)in.readObject();
+		withdrawl = new Integer(message);
+		
+		// Check amount for credit limit
+		if(withdrawl < 1000){
+			for (int i = 0; i < accountList.size(); i++) {
+				if (accountList.get(i).equals(currentAcc)) {
+					accountList.get(i).lodge(withdrawl);
+				}
+			}
+		}
+		else if(withdrawl > 1000)
+			sendMessage("Max Credit of 1000 (Enter to continue)");
+		
+	} // end withdraw
+
+} // end Server class

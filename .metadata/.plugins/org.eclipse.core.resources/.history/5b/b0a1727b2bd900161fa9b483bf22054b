@@ -1,0 +1,118 @@
+// G00320698 Rebecca Kane
+// Server class based on "EchoServer" file on moodle, lecturer Martin Hynes / Operating Systems 1
+
+package server;
+
+import java.io.*;
+import java.net.*;
+import java.util.*;
+
+public class Server{
+	ServerSocket providerSocket;
+	Socket connection = null;
+
+	ObjectOutputStream out;
+	ObjectInputStream in;
+	Scanner input;
+	String message;
+	String user_input;
+	String name;
+	String address;
+	int bankAccNum;
+	String userName;
+	String password;
+	int balance;
+	
+	//ArrayList<accounts> acc = new ArrayList<accounts>();
+	
+	
+	Server()
+	{
+		input = new Scanner(System.in);
+	}
+	
+	public void listener()
+	{
+		try{
+			//1. creating a server socket
+			providerSocket = new ServerSocket(2010, 10);
+			//2. Wait for connection
+			System.out.println("Waiting for connection");
+			
+			connection = providerSocket.accept();
+			
+			System.out.println("Connection received from " + connection.getInetAddress().getHostName());
+			//3. get Input and Output streams
+			out = new ObjectOutputStream(connection.getOutputStream());
+			out.flush();
+			in = new ObjectInputStream(connection.getInputStream());
+			
+			//4. The two parts communicate via the input and output streams
+			do{
+				try{
+					sendMessage("Please Enter Name ");
+					message = (String)in.readObject();
+					name = new String(message);
+					
+					sendMessage("Please Enter Address");
+					message = (String)in.readObject();
+					address = new String(message);
+					
+					sendMessage("Please enter bank Account Number");
+					message = (String)in.readObject();
+					bankAccNum = new Integer(message);
+					
+					sendMessage("Please enter username");
+					message = (String)in.readObject();
+					userName = new String (message);
+					
+					sendMessage("Please enter password");
+					message = (String)in.readObject();
+					password = new String (message);
+					
+					message=(String)in.readObject();
+					
+					if(message.compareTo("Thank You!")==0)
+						sendMessage("Thank You!");
+	
+				}
+				catch(ClassNotFoundException classnot){
+					System.err.println("Data received in unknown format");
+				}
+			}while(!message.equals("Thank You!"));
+		}
+		catch(IOException ioException){
+			ioException.printStackTrace();
+		}
+		finally{
+			//4: Closing connection
+			try{
+				in.close();
+				out.close();
+				providerSocket.close();
+			}
+			catch(IOException ioException){
+				ioException.printStackTrace();
+			}
+		}
+	}
+	void sendMessage(String msg)
+	{
+		try{
+			out.writeObject(msg);
+			out.flush();
+			System.out.println("server>" + msg);
+		}
+		catch(IOException ioException){
+			ioException.printStackTrace();
+		}
+	}
+	public static void main(String args[])
+	{
+		Server server = new Server();
+		while(true)
+		{
+			Server.listener();
+		}
+	}
+}

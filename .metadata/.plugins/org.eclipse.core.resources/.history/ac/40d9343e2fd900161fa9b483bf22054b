@@ -1,0 +1,99 @@
+// G00320698 - Rebecca Kane
+// Accounts class is just getters and setters with user info, all generated from Source in eclipse
+
+package server;
+
+public class Accounts {
+
+	// Account Variables
+		private String name;
+		private String address;
+		private int accNum;
+		private String username;
+		private String password;
+		private int credit;
+		private int balance;
+		
+		// Constructors
+		public Accounts() {
+			super();
+		}
+		public Accounts(String name, String address, int accNum, String username, String password, int balance) {
+			super();
+			this.name = name;
+			this.address = address;
+			this.accNum = accNum;
+			this.username = username;
+			this.password = password;
+			this.balance = balance;
+		}
+		
+		// Gets & Sets
+		// Name
+		public String getName() {
+			return name;
+		}
+		public void setName(String name) {
+			this.name = name;
+		}
+		
+		//Address
+		public String getAddress() {
+			return address;
+		}
+		public void setAddress(String address) {
+			this.address = address;
+		}
+		
+		// Account Number
+		public int getAccountNum() {
+			return accNum;
+		}
+		public void setAccountNum(int accNum) {
+			this.accNum = accNum;
+		}
+		public String getUsername() {
+			return username;
+		}
+		public void setUsername(String username) {
+			this.username = username;
+		}
+		public String getPassword() {
+			return password;
+		}
+		public void setPassword(String password) {
+			this.password = password;
+		}
+		public float getCredit() {
+			return credit;
+		}
+		public void setCredit(int credit) {
+			this.credit = credit;
+		}
+		public int getBalance() {
+			return balance;
+		}
+		public void setBalance(int balance) {
+			this.balance = balance;
+		}
+
+		// toString to output details of the account
+		@Override
+		public String toString() {
+			return "Account [name=" + name + ", address=" + address + ", accNum=" + accNum + ", username="
+					+ username + ", password=" + password + ", credit=" + credit + ", balance=" + balance + "]";
+		}
+		
+		// Lodge money to the users account
+		public int lodge(int lodegement){
+			balance = balance + lodegement;
+			return balance;
+		}
+		
+		// Withdraw up to 1000 from the users account
+		public int withdraw(int withdrawl){
+			balance = balance - withdrawl;
+			return balance;
+		}
+	
+}

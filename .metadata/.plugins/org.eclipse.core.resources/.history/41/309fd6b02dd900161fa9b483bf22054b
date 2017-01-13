@@ -1,0 +1,86 @@
+package client;
+
+import java.io.*;
+import java.net.*;
+import java.util.*;
+
+public class Client{
+	
+	Socket requestSocket;
+	ObjectOutputStream out;
+ 	ObjectInputStream in;
+ 	String message="";
+ 	String ipaddress;
+ 	Scanner stdin;
+	Client(){}
+	
+	public static void main(String args[])
+	{
+		Client client = new Client();
+		client.run();
+	}
+	
+	void run()
+	{
+		stdin = new Scanner(System.in);
+		try{
+			// Setting up socket to connect to server
+			System.out.println("Please Enter your IP Address (127.0.0.1 for local)");
+			// Take in users required ip address and start it
+			ipaddress = stdin.next();
+			requestSocket = new Socket(ipaddress, 2004);
+			System.out.println("Connected to " + ipaddress + " in port 2004");
+			
+			// Setting up output and input
+			out = new ObjectOutputStream(requestSocket.getOutputStream());
+			out.flush();
+			in = new ObjectInputStream(requestSocket.getInputStream());
+			
+			// Contacting Server
+			do{
+				try{
+					// Take in instructions from the server
+					message = (String)in.readObject();
+					System.out.println(message);
+					// Send back option selected
+					message = stdin.next();
+					sendMessage(message);
+				}
+				catch(ClassNotFoundException classNot){
+					System.err.println("Data received in unknown format");
+				}
+				
+			}while(!message.equals("Thank you, Goodbye"));
+		}
+		catch(UnknownHostException unknownHost){
+			System.err.println("You are trying to connect to an unknown host!");
+		}
+		catch(IOException ioException){
+			ioException.printStackTrace();
+		}
+		finally{
+			// Closing connection and tidy up
+			try{
+				in.close();
+				out.close();
+				requestSocket.close();
+			}
+			catch(IOException ioException){
+				ioException.printStackTrace();
+			}
+		}
+	}
+	
+	// Send message back to the server
+	void sendMessage(String msg)
+	{
+		try{
+			out.writeObject(msg);
+			out.flush();
+			System.out.println("client>" + msg);
+		}
+		catch(IOException ioException){
+			ioException.printStackTrace();
+		}
+	}
+}

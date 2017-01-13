@@ -1,6 +1,3 @@
-// G00320698 Rebecca Kane
-// Server Class based on "Provider" file on moodle, lecturer Martin Hynes / Operating Systems 1
-
 package server;
 
 import java.io.*;
@@ -8,18 +5,22 @@ import java.net.*;
 import java.util.Scanner;
 
 public class Server{
-	ServerSocket serverSocket;
+	// Basic behind the scenes variables
+	ServerSocket providerSocket;
 	Socket connection = null;
-
 	ObjectOutputStream out;
 	ObjectInputStream in;
 	Scanner input;
 	String message;
-	String user_input;
-	int num1;
-	int num2;
-	int choice;
-	int result;
+	String console;
+	
+	
+	// UI based variables
+	String name, address;
+	String username, password;
+	int accountNo;
+	int choice, loggedInChoice;
+	float balance = 100, transactionAmt;
 	
 	
 	Server()
@@ -30,11 +31,11 @@ public class Server{
 	{
 		try{
 			//1. creating a server socket
-			serverSocket = new ServerSocket(2010, 10);
+			providerSocket = new ServerSocket(2010, 10);
 			//2. Wait for connection
 			System.out.println("Waiting for connection");
 			
-			connection = serverSocket.accept();
+			connection = providerSocket.accept();
 			
 			System.out.println("Connection received from " + connection.getInetAddress().getHostName());
 			//3. get Input and Output streams
@@ -45,33 +46,54 @@ public class Server{
 			//4. The two parts communicate via the input and output streams
 			do{
 				try{
-					sendMessage("Please Enter the Number 1");
-					message = (String)in.readObject();
-					num1 = new Integer(message);
-					
-					sendMessage("Please Enter the Number 2");
-					message = (String)in.readObject();
-					num2 = new Integer(message);
-					
-					sendMessage("Please enter 1 for addition OR 2 for subtraction");
+					/*
+					sendMessage("Your balance is: " + balance);
+					message = (String)in.readObject();*/
+
+					sendMessage("Would you like to...\n1. Make a Withdrawal\n2. Make A Lodgement");
 					message = (String)in.readObject();
 					choice = new Integer(message);
+			
+					if(choice == 1){
+						sendMessage("How much would you like to withdraw?");
+						message = (String)in.readObject();
+						transactionAmt = new Float(message);
+						
+						if ((balance-transactionAmt) > -1000){
+							balance = balance - transactionAmt;
+							sendMessage("Your balance is now: " + balance);
+						}
+						else{
+							sendMessage("Oops! You have too much of an overdraft...");
+							sendMessage("Your balance is: " + balance);
+						}
+						
+					}
 					
-					if(choice==1)
-						result = num1 + num2;
-					else if(choice==2)
-						result = num1 - num2;
+					else if(choice==2){
+						sendMessage("How much would you like to lodge?");
+						message = (String)in.readObject();
+						transactionAmt = new Float(message);
+						
+						balance = balance + transactionAmt;
+						sendMessage("Your balance is now: " + balance);
+						
+						sendMessage("Would you like to...\n1. Make a Withdrawal\n2. Make A Lodgement");
+						message = (String)in.readObject();
+						choice = new Integer(message);
+							
+					}
 					
-					sendMessage(""+result);
+					else{
+						sendMessage("Oops! Please enter a valid option...");
+						message = (String)in.readObject();
+						choice = new Integer(message);
+					}
 					
 					message=(String)in.readObject();
 					
-					if(message.compareTo("Thank You!")==0)
-						sendMessage("Thank You!");
-					
-					
-					
-					
+					if(message.compareTo("Withdraw")==0)
+						sendMessage("Withdraw");
 				}
 				catch(ClassNotFoundException classnot){
 					System.err.println("Data received in unknown format");
@@ -86,7 +108,7 @@ public class Server{
 			try{
 				in.close();
 				out.close();
-				serverSocket.close();
+				providerSocket.close();
 			}
 			catch(IOException ioException){
 				ioException.printStackTrace();
@@ -113,3 +135,48 @@ public class Server{
 		}
 	}
 }
+
+
+/* Bypassing log in for now...
+sendMessage("1. Register\n2.Log In");
+message = (String)in.readObject();
+choice = new Integer(message);
+
+if(choice == 1){
+	sendMessage("Name: ");
+	message = (String)in.readObject();
+	name = new String(message);
+	
+	sendMessage("Address: ");
+	message = (String)in.readObject();
+	address = new String(message);
+	
+	sendMessage("A/C Num: ");
+	message = (String)in.readObject();
+	accountNo = new Integer(message);
+	
+	sendMessage("Username: ");
+	message = (String)in.readObject();
+	username = new String(message);
+	
+	sendMessage("Password: ");
+	message = (String)in.readObject();
+	password = new String(message);
+}
+
+else if(choice == 2){
+	sendMessage("Username: ");
+	message = (String)in.readObject();
+	username = new String(message);
+	
+	sendMessage("Password: ");
+	message = (String)in.readObject();
+	password = new String(message);
+}
+
+else{
+	sendMessage("Oops! Please enter a valid option...");
+	message = (String)in.readObject();
+	choice = new Integer(message);
+}
+*/
